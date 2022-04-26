@@ -13,6 +13,7 @@
                     <?php echo new Template('patients-management/dialogs/follow-ups_appointments') ?>
                     <?php echo new Template('patients-management/dialogs/compare-patients') ?>
                     <?php echo new Template('patients-management/statistics/main') ?>
+                    <?php echo new Template('patients-management/statistics-comparison/form') ?>
                     <?php echo new Template('patients-management/comparison/main') ?>
                     <?php /* echo new Template('patients-management/comparison/average-main') */?>
 
@@ -28,18 +29,24 @@
 
                                 <template #top>
                                     <v-row>
-                                        <v-col cols="12" md="4" lg="6" xl="8">
+                                        <v-col cols="12" md="4" lg="4" xl="6">
                                             <v-text-field class="mx-4 v-normal-input" label="Buscar paciente"
                                                 v-model="patients_search" append-icon="mdi-magnify" clearable outlined
                                                 single-line hide-details></v-text-field>
                                         </v-col>
-                                        <v-col cols="12" md="6" lg="6" xl="4">
+                                        <v-col cols="12" md="8" lg="8" xl="6">
                                             <v-toolbar class="d-flex justify-center" flat>
                                                 <v-btn class="mr-1" color="primary"
                                                     @click="viewPatientsStatisticsDialog = true; initializeBasicStatistics();"
                                                     v-if="patients.length > 0" dark rounded>
                                                     <v-icon>mdi-poll</v-icon>
                                                     Estádisticas Básicas
+                                                </v-btn>
+                                                <v-btn class="mr-1" color="blue"
+                                                    @click="ComparisonUpcmDialogForm = true; initializeBasicStatistics();"
+                                                    v-if="patients.length > 0" dark rounded>
+                                                    <v-icon>mdi-poll</v-icon>
+                                                    Comparar estadisticas
                                                 </v-btn>
                                                 <v-btn class="mr-1" color="primary"
                                                     @click="viewPatientsAverageComparisonDialog = true"
@@ -102,6 +109,7 @@
                             </v-data-table>
                         </v-col>
                     </v-row>
+                    <?php echo new Template('patients-management/statistics-comparison/comparison') ?>
                 </v-col>
             </v-row>
         </v-container>

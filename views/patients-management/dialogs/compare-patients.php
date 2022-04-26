@@ -15,7 +15,7 @@
         <v-card-text>
             <v-container fluid>
                 <v-row>
-                    <v-col cols="12" :md="comparison.type_selected == 1 ? 6 : 4">
+                    <v-col cols="12" :md="comparison.type_selected == 1 ? 6 : 6">
                         <label for="">Tipo de comparación</label>
                         <v-select v-model="comparison.type_selected" :items="comparison.types">
                         </v-select>
@@ -40,14 +40,25 @@
                         </v-col>
                     </template>
                     <template v-else>
-                        <v-col cols="12" md="4">
+                       <!--  <v-col cols="12" md="4">
                             <label for="">Seleccione la unidad</label>
                             <v-select v-model="comparison.type_selected" :items="comparison.types">
                             </v-select>
-                        </v-col>
-                        <v-col cols="12" md="4">
+                        </v-col> -->
+                        <v-col cols="12" md="6">
                             <label for="">Seleccione el paciente</label>
-                            <v-select v-model="comparison.type_selected" :items="comparison.types">
+                            <v-select v-model="comparison.patient_to_compare" :items="comparison.external_patients_filtered" :item-text="(e) => e.full_name" clearable return-object>
+                                <template #prepend-item>
+                                    <v-list-item>
+                                        <v-list-item-content>
+                                            <v-text-field v-model="comparison.search"
+                                                placeholder="Buscar paciente"
+                                                @input="searchPatientsComparisonExternal" @click:clear="searchPatientsComparison" 
+                                                clearable outlined></v-text-field>
+                                        </v-list-item-content>
+                                    </v-list-item>
+                                    <v-divider></v-divider>
+                                </template>
                             </v-select>
                         </v-col>
                     </template>

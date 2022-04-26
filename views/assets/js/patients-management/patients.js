@@ -80,12 +80,12 @@ let vm = new Vue({
           text: 'Pacientes de la misma unidad',
           value: 1,
         },
-        /*
+        
         {
           text: 'Pacientes de otras unidades',
           value: 2,
-        },
-        */
+        }
+       
       ],
       patients: [],
       external_patients: [],
@@ -346,8 +346,159 @@ let vm = new Vue({
             },
           ]
         },
-      }
+      },
+      
     },
+    statisticsComparison: {
+      male: {
+        age_average: 0,
+        total_patients: 0,
+      },
+      female: {
+        age_average: 0,
+        total_patients: 0,
+      },
+      anthropometry: {
+        loading: false,
+        items: [],
+        weight: 0,
+        height: 0,
+        abdominal_waist: 0,
+        cs: 0,
+        bmi: 0
+      },
+      life_style: {
+        loading: false,
+        items: [],
+        smoking: {
+          active: 0,
+          inactive: 0
+        },
+        alcohol_consumption: {
+          active: 0,
+          inactive: 0
+        },
+        sedentary: {
+          active: 0,
+          inactive: 0
+        },
+        exercises: {
+          aerobics: 0,
+          resistance: 0,
+          time_weekly_avg: 0
+        }
+      },
+      diseases: {
+        loading: false,
+        histories: [],
+        hta: {
+          controlled: 0,
+          no_controlled: 0
+        },
+        dmt2: {
+          controlled: 0,
+          no_controlled: 0
+        },
+        dyslipidemia: {
+          controlled: 0,
+          no_controlled: 0
+        },
+        obesity: {
+          total: 120
+        },
+        smoking: 0,
+      },
+      laboratory_exam: {
+        loading: false,
+        items: [{
+            name: 'Colesterol Total',
+            nomenclature: 'mg/dL',
+            items: 0,
+            total: 0
+          },
+          {
+            name: 'Triglicéridos',
+            nomenclature: 'mg/dL',
+            items: 0,
+            total: 0
+          },
+          {
+            name: 'Colesterol HDL',
+            nomenclature: 'mg/dL',
+            items: 0,
+            total: 0
+          },
+          {
+            name: 'Colesterol No HDL',
+            nomenclature: 'mg/dL',
+            items: 0,
+            total: 0
+          },
+          {
+            name: 'Glicemia en ayunas',
+            nomenclature: 'mg/dL',
+            items: 0,
+            total: 0
+          },
+          {
+            name: 'Glicemia postprandial',
+            nomenclature: 'mg/dL',
+            items: 0,
+            total: 0
+          },
+        ],
+      },
+      chart: {
+        loading: false,
+        monthly_data: {
+          current_year: moment().format('YYYY'),
+          months: ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', ],
+          labels: [
+            'Enero', 'Febrero', 'Marzo',
+            'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto',
+            'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+          ],
+          datasets: [{
+              label: 'Total',
+              backgroundColor: vuetify.preset.theme.themes.light.secondary,
+              data: []
+            },
+            {
+              label: 'Mujeres',
+              backgroundColor: '#e91e63',
+              data: []
+            },
+            {
+              label: 'Hombres',
+              backgroundColor: vuetify.preset.theme.themes.light.primary,
+              data: []
+            },
+          ]
+        },
+        weekly_data: {
+          current_day: moment().format('YYYY-MM-DD'),
+          labels: [],
+          datasets: [{
+              label: 'Total',
+              backgroundColor: vuetify.preset.theme.themes.light.secondary,
+              data: []
+            },
+            {
+              label: 'Mujeres',
+              backgroundColor: '#e91e63',
+              data: []
+            },
+            {
+              label: 'Hombres',
+              backgroundColor: vuetify.preset.theme.themes.light.primary,
+              data: []
+            },
+          ]
+        },
+      },
+      
+    },
+    
     patients: [],
     headers: [{
         text: 'N° de historia',
@@ -3358,6 +3509,35 @@ let vm = new Vue({
       whatsapp: '0',
       sms: '0',
     },
+    ComparisonUpcmDialogForm: false,
+    upcms: [],
+    upcms_filtered: [],
+    upcm_selected: null,
+    upcm_search: null,
+    ComparisonUpcmDialog: false,
+    tabsComparison:[
+      {
+        name: 'Pacientes Atendidos',
+        id: 'upcm_CPA'
+      },{
+        name: 'Generales',
+        id: 'upcm_general'
+      },{
+        name: 'Antropometría',
+        id: 'upcm_antro'
+      },{
+        name: 'Estilo de Vida',
+        id: 'upcm_EDV'
+      },{
+        name: 'Diagnósticos',
+        id: 'upcm_diag'
+      },{
+        name: 'Promedio de Valores',
+        id: 'upcm_PDV'
+      }
+    ],
+    view_comparison_tab_upcm: '#upcm_CPA'
+    
   },
 
   computed: {
@@ -3460,7 +3640,8 @@ let vm = new Vue({
   },
 
   created() {
-    this.initialize()
+    this.initialize(),
+    this.getListUPCM()
   },
 
   mounted() {},
@@ -4437,10 +4618,10 @@ let vm = new Vue({
         });
         app.statistics.chart.weekly_data.datasets[0].data[i] = filtered_date.length
         app.statistics.chart.weekly_data.datasets[1].data[i] = filtered_date.filter(f => {
-          return f.gender == 'M'
+          return f.gender == 'F'
         }).length
         app.statistics.chart.weekly_data.datasets[2].data[i] = filtered_date.filter(f => {
-          return f.gender == 'F'
+          return f.gender == 'M'
         }).length
 
       })
@@ -4451,10 +4632,10 @@ let vm = new Vue({
         });
         app.statistics.chart.monthly_data.datasets[0].data[i] = filtered_month.length
         app.statistics.chart.monthly_data.datasets[1].data[i] = filtered_month.filter(f => {
-          return f.gender == 'M'
+          return f.gender == 'F'
         }).length
         app.statistics.chart.monthly_data.datasets[2].data[i] = filtered_month.filter(f => {
-          return f.gender == 'F'
+          return f.gender == 'M'
         }).length
 
       })
@@ -4491,9 +4672,9 @@ let vm = new Vue({
         })
         app.statistics.anthropometry.items = res.body
         if (count > 0) {
-          app.statistics.anthropometry.weight = parseFloat(weight_average / count)
-          app.statistics.anthropometry.height = parseFloat(height_average / count)
-          app.statistics.anthropometry.abdominal_waist = parseFloat(abdominal_waist_average / count)
+          app.statistics.anthropometry.weight = parseFloat(weight_average / count).toFixed(2)
+          app.statistics.anthropometry.height = parseFloat(height_average / count).toFixed(2)
+          app.statistics.anthropometry.abdominal_waist = parseFloat(abdominal_waist_average / count).toFixed(2)
 
           app.statistics.anthropometry.bmi = app.getBMI(app.statistics.anthropometry.weight, app.statistics.anthropometry.height, 'kg', 'cm').replace(' kg/m2', '')
           app.statistics.anthropometry.cs = app.getCS(app.statistics.anthropometry.weight, app.statistics.anthropometry.height, 'kg', 'cm').replace(' m2', '')
@@ -8036,10 +8217,306 @@ let vm = new Vue({
         return patient.full_name.toLowerCase().includes(search.toLowerCase())
       })
     },
+    searchPatientsComparisonExternal() {
+      var search = this.comparison.search == null ? '' : this.comparison.search
+      return this.comparison.external_patients_filtered = this.comparison.external_patients.filter(patient => {
+        return patient.full_name.toLowerCase().includes(search.toLowerCase())
+      })
+    },
 
     getTelephoneInput(text, data) {
       this.editedItem.telephone = data.number.international
     },
+    getListUPCM(id = 0){
+      var url = api_url + 'upcms/get'
+      var app = this
+      app.$http.get(url).then(res => {
+          app.upcms = res.body;
+          app.upcms_filtered = res.body;
+        }, err => {
 
+        })
+    },
+    searchUpcmComparison(){
+      var search = this.upcm_search == null ? '' : this.upcm_search
+      return this.upcms_filtered = this.upcms.filter(upcm => {
+        return upcm.upcm_name.toLowerCase().includes(search.toLowerCase())
+      })
+    },
+    getComponent(template){
+      var url = api_url + 'component/get'
+      var app = this
+      app.$http.post(url, {template}).then(res => {
+         console.log(res);
+        }, err => {
+
+        })
+    },
+    initializeBasicStatisticsComparison() {
+      this.loadPatientsEntryStatisticsComparison()
+      this.loadGeneralStatisticsComparison()
+      this.loadAnthropometryStatisticsComparison()
+      this.loadLifeStyleStatisticsComparison()
+      this.loadDiseasesStatisticsComparison()
+      this.loadLaboratoryExamsStatisticsComparison()
+    },
+    loadLaboratoryExamsStatisticsComparison() {
+      var app = this
+      app.statisticsComparison.laboratory_exam.loading = true
+      var upcm_patients = app.comparison.external_patients.filter((patient)=>{
+        return patient.patient_upcm == app.upcm_selected.upcm_id;
+      });
+      var data = {
+        patients: upcm_patients,
+        exams: app.statisticsComparison.laboratory_exam.items
+      }
+
+      var url = api_url + 'medical-exams/get-exams-by-patient-list'
+      app.$http.post(url, data).then(res => {
+        app.statisticsComparison.laboratory_exam.items.forEach(e => {
+          var items = res.body.filter(i => {
+            return i.name == e.name
+          })
+          e.items = items.length
+          items.forEach(item => {
+            e.total = e.total + parseInt(item.results)
+          })
+          if (e.items > 0) {
+            e.total = parseInt(e.total / items.length)
+          }
+        })
+        app.statisticsComparison.laboratory_exam.loading = false
+      }, err => {
+        app.statisticsComparison.laboratory_exam.loading = false
+      })
+
+    },
+    loadLifeStyleStatisticsComparison() {
+      var app = this
+      var life_style = app.statisticsComparison.life_style
+      var exercise_weekly_minutes_count = 0
+      var exercise_weekly_minutes_total = 0
+      var upcm_patients = app.comparison.external_patients.filter((patient)=>{
+        return patient.patient_upcm == app.upcm_selected.upcm_id;
+      });
+      life_style.loading = true
+      var url = api_url + 'patient-life-style/get-by-list'
+
+      app.$http.post(url, upcm_patients).then(res => {
+        res.body.forEach(e => {
+          e.exercise = JSON.parse(e.exercise)
+          e.smoking = JSON.parse(e.smoking)
+          parseInt(e.smoking.active) ? life_style.smoking.active++ : life_style.smoking.inactive++
+          parseInt(e.alcohol_consumption) ? life_style.alcohol_consumption.active++ : life_style.alcohol_consumption.inactive++
+          parseInt(e.sedentary) ? life_style.sedentary.active++ : life_style.sedentary.inactive++
+          if (!parseInt(e.sedentary)) {
+            if (e.exercise.type.includes('Aeróbico')) {
+              life_style.exercises.aerobics++
+              exercise_weekly_minutes_count = exercise_weekly_minutes_count + 1
+              exercise_weekly_minutes_total = exercise_weekly_minutes_total + parseInt(e.aerobic_weekly_minutes)
+            } else if (e.exercise.type.includes('Resistencia')) {
+              life_style.exercises.resistance++
+              exercise_weekly_minutes_count = exercise_weekly_minutes_count + 1
+              exercise_weekly_minutes_total = exercise_weekly_minutes_total + parseInt(e.resistance_weekly_minutes)
+            }
+          }
+        })
+        exercise_weekly_minutes_count > 0 ? life_style.exercises.time_weekly_avg =
+          Math.round(exercise_weekly_minutes_total / exercise_weekly_minutes_count) : ''
+        life_style.loading = false
+      }, err => {
+        life_style.loading = false
+      })
+
+    },
+    loadPatientsEntryStatisticsComparison() {
+      var app = this
+      app.statisticsComparison.chart.loading = true;
+      var upcm_patients = app.comparison.external_patients.filter((patient)=>{
+        return patient.patient_upcm == app.upcm_selected.upcm_id;
+      });
+
+      for (var i = 0; i < 8; i++) {
+        app.statisticsComparison.chart.weekly_data.labels[i] = moment(app.statisticsComparison.chart.weekly_data.current_day).subtract(7 - i, 'days').format('MM-DD')
+      }
+      app.statisticsComparison.chart.weekly_data.labels.forEach((e, i) => {
+        var filtered_date = upcm_patients.filter(p => {
+          return p.entry_date == moment().format('YYYY-') + e
+        });
+        app.statisticsComparison.chart.weekly_data.datasets[0].data[i] = filtered_date.length
+        app.statisticsComparison.chart.weekly_data.datasets[1].data[i] = filtered_date.filter(f => {
+          return f.gender == 'F'
+        }).length
+        app.statisticsComparison.chart.weekly_data.datasets[2].data[i] = filtered_date.filter(f => {
+          return f.gender == 'M'
+        }).length
+
+      })
+
+      app.statisticsComparison.chart.monthly_data.months.forEach((e, i) => {
+        var filtered_month = upcm_patients.filter(p => {
+          return p.entry_date.includes(moment().format('YYYY-') + e)
+        });
+        app.statisticsComparison.chart.monthly_data.datasets[0].data[i] = filtered_month.length
+        app.statisticsComparison.chart.monthly_data.datasets[1].data[i] = filtered_month.filter(f => {
+          return f.gender == 'F'
+        }).length
+        app.statisticsComparison.chart.monthly_data.datasets[2].data[i] = filtered_month.filter(f => {
+          return f.gender == 'M'
+        }).length
+
+      })
+
+      app.statisticsComparison.chart.loading = false
+      app.$refs.monthly_chart !== undefined ? app.$refs.monthly_chart.renderChart(app.statisticsComparison.chart.monthly_data) : ''
+      app.$refs.weekly_chart !== undefined ? app.$refs.weekly_chart.renderChart(app.statisticsComparison.chart.weekly_data) : ''
+    },
+    loadAnthropometryStatisticsComparison() {
+      var app = this
+      var obesity = app.statisticsComparison.diseases.obesity
+      var count = 0
+      var weight_average = 0
+      var height_average = 0
+      var abdominal_waist_average = 0
+      obesity.total = 0
+      var upcm_patients = app.comparison.external_patients.filter((patient)=>{
+        return patient.patient_upcm == app.upcm_selected.upcm_id;
+      });
+
+      app.statisticsComparison.anthropometry.loading = true
+      var url = api_url + 'anthropometry/get-by-list'
+
+      app.$http.post(url, upcm_patients).then(res => {
+        res.body.forEach(e => {
+          var weight = e.weight_suffix == 'lb' ? parseFloat(weight / 2.205).toFixed(2) : parseFloat(e.weight).toFixed(2)
+          var height = e.height_suffix == 'in' ? parseFloat(height / 2.54).toFixed(2) : parseFloat(e.height).toFixed(2)
+          var abdominal_waist = e.abdominal_waist_suffix == 'in' ? parseFloat(abdominal_waist / 2.54).toFixed(2) : parseFloat(e.abdominal_waist).toFixed(2)
+          if (weight > 0 || height > 0) {
+            count = count + 1
+            app.getBMI(weight, height, 'kg', 'cm').replace(' kg/m2', '') >= 30 ? obesity.total++ : ''
+            weight_average = weight_average + parseFloat(weight)
+            height_average = height_average + parseFloat(height)
+            abdominal_waist_average = abdominal_waist_average + parseFloat(abdominal_waist)
+          }
+        })
+        app.statisticsComparison.anthropometry.items = res.body
+        if (count > 0) {
+          app.statisticsComparison.anthropometry.weight = parseFloat(weight_average / count).toFixed(2)
+          app.statisticsComparison.anthropometry.height = parseFloat(height_average / count).toFixed(2)
+          app.statisticsComparison.anthropometry.abdominal_waist = parseFloat(abdominal_waist_average / count).toFixed(2)
+
+          app.statisticsComparison.anthropometry.bmi = app.getBMI(app.statisticsComparison.anthropometry.weight, app.statisticsComparison.anthropometry.height, 'kg', 'cm').replace(' kg/m2', '')
+          app.statisticsComparison.anthropometry.cs = app.getCS(app.statisticsComparison.anthropometry.weight, app.statisticsComparison.anthropometry.height, 'kg', 'cm').replace(' m2', '')
+        }
+        app.statisticsComparison.anthropometry.loading = false
+      }, err => {
+        app.statisticsComparison.anthropometry.loading = false
+      })
+
+    },
+    loadGeneralStatisticsComparison() {
+      var app = this
+      var age_male_count = 0
+      var age_female_count = 0
+      var age_female_average = 0
+      var age_male_average = 0
+      var upcm_patients = app.comparison.external_patients.filter((patient)=>{
+        return patient.patient_upcm == app.upcm_selected.upcm_id;
+      });
+
+      var female_patients = upcm_patients.filter(e => {
+        return e.gender == 'F'
+      })
+
+      female_patients.forEach(e => {
+        age_female_count = age_female_count + 1
+        age_female_average = age_female_average + app.getTimeDiff(e.birthdate)
+      })
+
+      var male_patients = upcm_patients.filter(e => {
+        return e.gender == 'M'
+      })
+
+      male_patients.forEach(e => {
+        age_male_count = age_male_count + 1
+        age_male_average = age_male_average + app.getTimeDiff(e.birthdate)
+      })
+
+      if (age_female_count > 0) {
+        app.statisticsComparison.female.age_average = Math.round(age_female_average / age_female_count)
+      }
+
+      if (age_male_count > 0) {
+        app.statisticsComparison.male.age_average = Math.round(age_male_average / age_male_count)
+      }
+
+      app.statisticsComparison.male.total_patients = male_patients.length
+      app.statisticsComparison.female.total_patients = female_patients.length
+
+    },
+    loadDiseasesStatisticsComparison() {
+      var app = this
+      var upcm_patients = app.comparison.external_patients.filter((patient)=>{
+        return patient.patient_upcm == app.upcm_selected.upcm_id;
+      });
+
+      var hta_average = {
+        controlled: 0,
+        no_controlled: 0
+      }
+      var dyslipidemia_average = {
+        controlled: 0,
+        no_controlled: 0
+      }
+      var dmt2_average = {
+        controlled: 0,
+        no_controlled: 0
+      }
+      app.statisticsComparison.diseases.loading = true
+      var url = api_url + 'history/get-by-list'
+
+      app.$http.post(url, upcm_patients).then(res => {
+        res.body.forEach(e => {
+          e.history_content = JSON.parse(e.history_content).diseases
+          var hta = e.history_content.hta
+          var dyslipidemia = e.history_content.dyslipidemia
+          var dmt2 = e.history_content.dtm2
+          if (hta.active) {
+            if (hta.controlled) {
+              hta_average.controlled = hta_average.controlled + 1
+            } else {
+              hta_average.no_controlled = hta_average.no_controlled + 1
+            }
+          }
+
+          if (dyslipidemia.active) {
+            if (dyslipidemia.controlled) {
+              dyslipidemia_average.controlled = dyslipidemia_average.controlled + 1
+            } else {
+              dyslipidemia_average.no_controlled = dyslipidemia_average.no_controlled + 1
+            }
+          }
+
+          if (dmt2.active) {
+            if (dmt2.controlled) {
+              dmt2_average.controlled = dmt2_average.controlled + 1
+            } else {
+              dmt2_average.no_controlled = dmt2_average.no_controlled + 1
+            }
+          }
+
+        })
+
+        app.statisticsComparison.diseases.hta = hta_average
+        app.statisticsComparison.diseases.dyslipidemia = dyslipidemia_average
+        app.statisticsComparison.diseases.dmt2 = dmt2_average
+        app.statisticsComparison.diseases.histories = res.body
+
+        app.statisticsComparison.diseases.loading = false
+      }, err => {
+        app.statisticsComparison.diseases.loading = false
+      })
+
+    },
   }
 });

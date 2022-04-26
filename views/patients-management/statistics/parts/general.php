@@ -8,7 +8,7 @@
         <v-alert color="secondary" icon="mdi-account-group" border="left" dark prominent>
             Pacientes: {{ patients.length }}
             <br>
-            Edad promedio: {{ Math.round((statistics.male.age_average + statistics.female.age_average ) / 2) }} años
+            Edad promedio: {{ Math.round((statistics.male.age_average + statistics.female.age_average ) / ((statistics.female.total_patients > 0 ? 1 : 0) + (statistics.male.total_patients > 0 ? 1 : 0) )) }} años
         </v-alert>
     </v-col>
 
